@@ -3313,7 +3313,11 @@ class PGDialect(default.DefaultDialect):
         return bool(connection.scalar(query))
 
     def _get_server_version_info(self, connection):
-        v = connection.exec_driver_sql("select pg_catalog.version()").scalar()
+        if connection.engine.kdb:
+            query="SELECT VERSION()"
+        else:
+            query="select pg_catalog.version()"
+        v = connection.exec_driver_sql(query).scalar()
         m = re.match(
             r".*(?:PostgreSQL|EnterpriseDB) "
             r"(\d+)\.?(\d+)?(?:\.(\d+))?(?:\.\d+)?(?:devel|beta)?",
@@ -3354,10 +3358,13 @@ class PGDialect(default.DefaultDialect):
         return connection.scalars(query).all()
 
     def _get_relnames_for_relkinds(self, connection, schema, relkinds, scope):
-        query = select(pg_catalog.pg_class.c.relname).where(
-            self._pg_class_relkind_condition(relkinds)
-        )
-        query = self._pg_class_filter_scope_schema(query, schema, scope=scope)
+        if hasattr(connection.engine, 'kdb') & connection.engine.kdb:
+            query = select(pg_catalog.pg_class.c.relname)
+        else:
+            query = select(pg_catalog.pg_class.c.relname).where(
+                self._pg_class_relkind_condition(relkinds)
+            )
+            query = self._pg_class_filter_scope_schema(query, schema, scope=scope)
         return connection.scalars(query).all()
 
     @reflection.cache

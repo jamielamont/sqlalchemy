@@ -733,11 +733,15 @@ def create_engine(url: Union[str, _url.URL], **kwargs: Any) -> Engine:
             finally:
                 # note that "invalidated" and "closed" are mutually
                 # exclusive in 1.4 Connection.
-                if not c.invalidated and not c.closed:
-                    # transaction is rolled back otherwise, tested by
-                    # test/dialect/postgresql/test_dialect.py
-                    # ::MiscBackendTest::test_initial_transaction_state
-                    dialect.do_rollback(c.connection)
+                if hasattr(engine, 'kdb'): 
+                    if engine.kdb:
+                        pass
+                else:
+                    if not c.invalidated and not c.closed:
+                        # transaction is rolled back otherwise, tested by
+                        # test/dialect/postgresql/test_dialect.py
+                        # ::MiscBackendTest::test_initial_transaction_state
+                        dialect.do_rollback(c.connection)
 
         # previously, the "first_connect" event was used here, which was then
         # scaled back if the "on_connect" handler were present.  now,

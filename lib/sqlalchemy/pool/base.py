@@ -917,6 +917,7 @@ class _ConnectionRecord(ConnectionPoolEntry):
 
 
 def _finalize_fairy(
+    engine,
     dbapi_connection: Optional[DBAPIConnection],
     connection_record: Optional[_ConnectionRecord],
     pool: Pool,
@@ -1385,8 +1386,9 @@ class _ConnectionFairy(PoolProxiedConnection):
     def _checkout_existing(self) -> _ConnectionFairy:
         return _ConnectionFairy._checkout(self._pool, fairy=self)
 
-    def _checkin(self, transaction_was_reset: bool = False) -> None:
+    def _checkin(self, engine=None transaction_was_reset: bool = False) -> None:
         _finalize_fairy(
+            engine,
             self.dbapi_connection,
             self._connection_record,
             self._pool,
@@ -1508,10 +1510,10 @@ class _ConnectionFairy(PoolProxiedConnection):
             if self._pool.dispatch.detach:
                 self._pool.dispatch.detach(self.dbapi_connection, rec)
 
-    def close(self) -> None:
+    def close(self, engine) -> None:
         self._counter -= 1
         if self._counter == 0:
-            self._checkin()
+            self._checkin(engine)
 
     def _close_special(self, transaction_reset: bool = False) -> None:
         self._counter -= 1

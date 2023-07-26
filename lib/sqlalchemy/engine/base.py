@@ -1242,7 +1242,7 @@ class Connection(ConnectionEventsTarget, inspection.Inspectable["Inspector"]):
                     transaction_reset=True
                 )
             else:
-                conn.close()
+                conn.close(engine=self.engine)
 
             # There is a slight chance that conn.close() may have
             # triggered an invalidation here in which case

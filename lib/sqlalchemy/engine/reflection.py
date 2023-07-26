@@ -324,8 +324,15 @@ class Inspector(inspection.Inspectable["Inspector"]):
         try:
             yield conn
         finally:
-            if self._op_context_requires_connect:
-                conn.close()
+            if hasattr(self.engine, "kdb"):
+                if not self.engine.kdb:
+                    if self._op_context_requires_connect:
+                        conn.close()
+                else:
+                    pass
+            else:
+                if self._op_context_requires_connect:
+                    conn.close()
 
     @contextlib.contextmanager
     def _inspection_context(self) -> Generator[Inspector, None, None]:
