@@ -986,12 +986,16 @@ def _finalize_fairy(
                 )
             assert fairy.dbapi_connection is dbapi_connection
 
-            fairy._reset(
-                pool,
-                transaction_was_reset=transaction_was_reset,
-                terminate_only=detach,
-                asyncio_safe=can_manipulate_connection,
-            )
+            if hasattr(engine, "kdb"):
+                if engine.kdb:
+                    pass
+                else:
+                    fairy._reset(
+                        pool,
+                        transaction_was_reset=transaction_was_reset,
+                        terminate_only=detach,
+                        asyncio_safe=can_manipulate_connection,
+                    )
 
             if detach:
                 if connection_record:
@@ -1386,7 +1390,7 @@ class _ConnectionFairy(PoolProxiedConnection):
     def _checkout_existing(self) -> _ConnectionFairy:
         return _ConnectionFairy._checkout(self._pool, fairy=self)
 
-    def _checkin(self, engine=None transaction_was_reset: bool = False) -> None:
+    def _checkin(self, engine=None, transaction_was_reset: bool = False) -> None:
         _finalize_fairy(
             engine,
             self.dbapi_connection,
